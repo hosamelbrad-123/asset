@@ -10,7 +10,7 @@
 *{box-sizing:border-box}html,body{margin:0}
 body{font:16px/1.5 "Segoe UI","Noto Sans Arabic",Tahoma,system-ui,sans-serif;background:var(--paper);color:var(--ink);padding-bottom:40px}
 header{position:sticky;top:0;z-index:5;background:var(--ink);color:#fff;display:flex;align-items:center;gap:10px;padding:12px 14px;padding-top:max(12px,env(safe-area-inset-top))}
-header h1{font-size:18px;margin:0;flex:1;font-weight:700}
+header{min-height:62px}header h1{font-size:19px;margin:0;font-weight:700;position:absolute;left:115px;right:115px;top:50%;transform:translateY(-50%);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
 main{max-width:640px;margin:0 auto;padding:14px}
 button,.btn{font:inherit;border:0;border-radius:var(--r);padding:12px 14px;background:var(--teal);color:#fff;font-weight:700;cursor:pointer;display:inline-block;text-align:center}
 button.bk{background:rgba(255,255,255,.16);color:#fff;font-size:19px;padding:9px 16px;display:flex;align-items:center;gap:8px}button.bk #bi{font-size:26px;line-height:1}
@@ -10215,7 +10215,7 @@ function go(v,n){view=v;if(n){cur=S[n];filt='all'}render();scrollTo(0,0)}
 function render(){
   const a=$('#app');$('#bt').textContent=view==='home'?'خروج':'رجوع';$('#bi').textContent=view==='home'?'✕':'→';
   $('#ttl').textContent=view==='inv'?cur.name:view==='locs'?'المواقع':'جرد الأصول';
-  if(view==='home'){a.innerHTML=`<div class="card"><h2 style="margin:0 0 6px">ابدأ الجرد</h2><p class="note">اختر ملف Excel من الموبايل. كل شيت يتحول إلى موقع تلقائياً، وكل شيء يعمل بدون إنترنت.</p><button class="big" data-a="pick">اختيار ملف الجرد</button></div>`+`<div class="qrb">${QR}<div class="note">حسام صلاح البراد</div></div>`+(store?'':'<div class="warn">المتصفح لا يسمح بحفظ التقدم هنا، فصدّر التقرير بعد كل موقع.</div>');return}
+  if(view==='home'){a.innerHTML=`<div class="card"><h2 style="margin:0 0 6px">ابدأ الجرد</h2><p class="note">اختر ملف Excel من الموبايل. كل شيت يتحول إلى موقع تلقائياً، وكل شيء يعمل بدون إنترنت.</p><button class="big" data-a="pick">اختيار ملف الجرد</button></div>`+`<div class="qrb">${QR}</div>`+(store?'':'<div class="warn">المتصفح لا يسمح بحفظ التقدم هنا، فصدّر التقرير بعد كل موقع.</div>');return}
   if(view==='locs'){
     a.innerHTML=`<p class="note">${esc(fname)}</p>`+(order.length?order.map(n=>{const s=S[n],c=stats(s),t=s.items.length;return `<button class="loc" data-a="loc" data-n="${esc(n)}"><b>${esc(n)}</b><small>تم جرد ${c.done} من ${t}</small>${barH(c,t)}</button>`}).join(''):'<div class="warn">لم أجد أصولاً في الملف. تأكد من وجود عمود «مسلسل الأصل» وبيانات تحته.</div>')
       +(ign?`<p class="note">تم تجاهل ${ign} شيت (فاضي أو بدون عمود «مسلسل الأصل»).</p>`:'')
