@@ -10233,7 +10233,7 @@ function render(){
 }
 function openSheet(i){
   pend=i;const r=cur.rec[i.k];useSel=r&&r.u?r.u:null;
-  $('#shc').innerHTML=`<b style="font-size:18px">${esc(i.d||i.s)}</b><div class="note">${esc(i.s)}${i.b?' · '+esc(i.b):''}${i.m?' '+esc(i.m):''}</div>${r?`<div class="warn">تم جرده سابقاً: ${r.c}${r.u?' · '+r.u:''} (${r.t}). اختيار جديد يحل محله.</div>`:''}
+  $('#shc').innerHTML=`<b style="font-size:18px">${esc(i.d||i.s)}</b><div class="note">${esc(i.s)}${i.b?' · '+esc(i.b):''}${i.m?' '+esc(i.m):''}</div>${r?`<div class="warn">تم جرده سابقاً: ${r.c}${r.u?' · '+r.u:''} (${r.t}${r.w?' · '+esc(r.w):''}). اختيار جديد يحل محله.</div>`:''}
   <div style="font-weight:700">الاستخدام</div>
   <div class="ub" id="ub"><button data-a="u" data-n="مستغل" class="${useSel==='مستغل'?'on':''}">مستغل</button><button data-a="u" data-n="غير مستغل" class="${useSel==='غير مستغل'?'on':''}">غير مستغل</button></div>
   <div style="font-weight:700">الحالة الظاهرية</div>
@@ -10246,7 +10246,7 @@ function saveRec(c){
   if(!useSel){$('#ub').classList.add('err');return toast('اختر الاستخدام: مستغل أو غير مستغل أولاً','w')}
   const ta=$('#nt'),n=ta.value.trim();
   if(c==='ردئ'&&!n){ta.classList.add('err');ta.focus();return toast('اكتب ملاحظة قبل حفظ حالة «ردئ»','w')}
-  cur.rec[pend.k]={c,n,u:useSel,t:new Date().toLocaleString('sv').slice(0,16)};sv();
+  cur.rec[pend.k]={c,n,u:useSel,w:lastU,t:new Date().toLocaleString('sv').slice(0,16)};sv();
   $('#sheet').hidden=true;render();toast('تم الحفظ ✓','ok');
 }
 function handle(code){
@@ -10276,14 +10276,14 @@ function scanStop(){clearTimeout(tm);if(stream)stream.getTracks().forEach(t=>t.s
 // ---- export ----
 function sheetOut(n){
   const s=S[n],W=Math.max(...s.rows.map(r=>r.length)),hu=s.c.u!==undefined;
-  const ex=hu?['الحالة الفعلية','الملاحظة','وقت الجرد','نتيجة الجرد']:['الحالة الفعلية','الاستخدام','الملاحظة','وقت الجرد','نتيجة الجرد'];
+  const ex=hu?['الحالة الفعلية','الملاحظة','وقت الجرد','المستخدم','نتيجة الجرد']:['الحالة الفعلية','الاستخدام','الملاحظة','وقت الجرد','المستخدم','نتيجة الجرد'];
   const blank=()=>ex.map(()=>'');
   const out=s.rows.map((r,i)=>{r=r.concat(Array(W-r.length).fill(''));if(i<s.h)return r.concat(blank());
     if(i===s.h)return r.concat(ex);
     const k=norm(r[s.c.s]);if(!k)return r.concat(blank());const x=s.rec[k];
     if(hu&&x&&x.u)r[s.c.u]=x.u;
     if(!x){const b=blank();b[b.length-1]='لم يتم الجرد';return r.concat(b)}
-    return r.concat(hu?[x.c,x.n||'',x.t,'تم الجرد']:[x.c,x.u||'',x.n||'',x.t,'تم الجرد'])});
+    return r.concat(hu?[x.c,x.n||'',x.t,x.w||'','تم الجرد']:[x.c,x.u||'',x.n||'',x.t,x.w||'','تم الجرد'])});
   return XLSX.utils.aoa_to_sheet(out);
 }
 function exportXlsx(names){
@@ -10316,25 +10316,28 @@ $('#ph').addEventListener('change',async e=>{
   const f=e.target.files[0];e.target.value='';if(!f)return;
   try{const bm=await createImageBitmap(f),c=await decode(bm,bm.width,bm.height,1600);c?handle(c):toast('لم أجد QR في الصورة — قرّب الكاميرا وأعد المحاولة','w')}catch(err){toast('تعذر قراءة الصورة','w')}
 });
-// ---- access gate (shared password, checked against access.json) ----
+// ---- access gate (usernames + passwords, checked against access.json) ----
 const GRACE=7*24*3600*1000,AK='acc|state';
-let locked=true,chk=true,lockMsg='',AC=null,fails=0,until=0;
+let locked=true,chk=true,lockMsg='',AC=null,fails=0,until=0,lastU='';
 const hx=b=>[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');
 const unhx=h=>new Uint8Array((String(h).match(/../g)||[]).map(x=>parseInt(x,16)));
+const nu=x=>String(x||'').trim().toLowerCase();
 async function pbk(pw,A){const k=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveBits']);return hx(await crypto.subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',salt:unhx(A.salt),iterations:A.iter||200000},k,256))}
-function getSt(){try{return JSON.parse(localStorage.getItem(AK)||'null')}catch(e){return null}}
+function getSt(){try{const o=JSON.parse(localStorage.getItem(AK)||'null');return o&&o.u?o:null}catch(e){return null}}
 function setSt(o){try{localStorage.setItem(AK,JSON.stringify(o))}catch(e){}}
 async function getAcc(){
   try{const c=new AbortController(),t=setTimeout(()=>c.abort(),5000);
     const r=await fetch('access.json?'+Date.now(),{cache:'no-store',signal:c.signal});clearTimeout(t);
-    if(!r.ok)return 0;const j=await r.json();return j&&j.hash&&j.salt?j:0}
+    if(!r.ok)return 0;const j=await r.json();return j&&Array.isArray(j.users)&&j.users.length?j:0}
   catch(e){return null}
 }
 async function gate(){
   const A=await getAcc(),st=getSt(),now=Date.now();
-  if(A){AC=A;
-    if(st&&st.h===A.hash){setSt({h:A.hash,t:now});return true}
-    lockMsg=st?'تم تغيير كلمة السر. اكتب كلمة السر الجديدة.':'اكتب كلمة السر للدخول.';return false}
+  if(st)lastU=st.u;
+  if(A){AC=A;const e=st&&A.users.find(x=>nu(x.u)===nu(st.u));
+    if(e&&e.hash===st.h){setSt({u:st.u,h:e.hash,t:now});return true}
+    lockMsg=!st?'اكتب اسم المستخدم وكلمة السر.':e?'تم تغيير كلمة السر. اكتب كلمة السر الجديدة.':'هذا المستخدم غير موجود أو تم إيقافه.';
+    return false}
   if(st&&now-st.t<=GRACE)return true;
   lockMsg=A===0?'ملف الدخول access.json غير موجود أو غير صالح على الموقع.':st?'انتهت مدة العمل بدون إنترنت (7 أيام). اتصل بالإنترنت ثم أعد فتح التطبيق.':'يلزم اتصال بالإنترنت لأول دخول.';
   return false;
@@ -10342,19 +10345,20 @@ async function gate(){
 function lockUI(a){
   $('#ttl').textContent='جرد الأصول';$('#bt').textContent='خروج';$('#bi').textContent='✕';
   a.innerHTML=chk?'<div class="card"><p class="note">جارٍ التحقق…</p></div>':
-  `<div class="card"><h2 style="margin:0 0 6px">تسجيل الدخول</h2><p class="note">${esc(lockMsg)}</p><input type="password" id="pw" placeholder="كلمة السر" autocomplete="current-password"><div class="row"><button class="big" data-a="unlock">دخول</button></div></div>`;
+  `<div class="card"><h2 style="margin:0 0 6px">تسجيل الدخول</h2><p class="note">${esc(lockMsg)}</p><input type="text" id="un" placeholder="اسم المستخدم" autocomplete="username" autocapitalize="none" value="${esc(lastU)}"><input type="password" id="pw" placeholder="كلمة السر" autocomplete="current-password"><div class="row"><button class="big" data-a="unlock">دخول</button></div></div>`;
 }
 async function unlock(){
-  const pw=($('#pw')||{}).value;if(!pw)return;
+  const un=nu(($('#un')||{}).value),pw=($('#pw')||{}).value;
+  if(!un||!pw)return toast('اكتب اسم المستخدم وكلمة السر','w');
   if(Date.now()<until)return toast('انتظر قليلاً قبل المحاولة التالية','w');
   const A=await getAcc()||AC;
   if(!A){lockMsg='لا يمكن التحقق الآن. تأكد من الإنترنت ثم حاول مرة أخرى.';return render()}
-  AC=A;let h;
-  try{h=await pbk(pw,A)}catch(e){return toast('المتصفح لا يدعم التحقق هنا','w')}
-  if(h===A.hash){locked=false;fails=0;setSt({h:A.hash,t:Date.now()});render();toast('تم الدخول ✓','ok')}
-  else{const el=$('#pw');if(el)el.value='';if(++fails>=5){fails=0;until=Date.now()+30000;toast('محاولات كثيرة. انتظر 30 ثانية','w')}else toast('كلمة السر غير صحيحة','w')}
+  AC=A;const e=A.users.find(x=>nu(x.u)===un);let ok=false;
+  if(e){try{ok=(await pbk(pw,e))===e.hash}catch(x){return toast('المتصفح لا يدعم التحقق هنا','w')}}
+  if(ok){locked=false;fails=0;lastU=un;setSt({u:un,h:e.hash,t:Date.now()});render();toast('أهلاً '+un,'ok')}
+  else{const el=$('#pw');if(el)el.value='';if(++fails>=5){fails=0;until=Date.now()+30000;toast('محاولات كثيرة. انتظر 30 ثانية','w')}else toast('اسم المستخدم أو كلمة السر غير صحيحة','w')}
 }
-document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='pw')unlock()});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.target.id==='pw'||e.target.id==='un'))unlock()});
 document.addEventListener('visibilitychange',async()=>{
   if(document.hidden||locked)return;
   if(!(await gate())){locked=true;scanStop();$('#sheet').hidden=true;render()}
