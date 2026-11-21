@@ -10316,30 +10316,37 @@ $('#ph').addEventListener('change',async e=>{
   const f=e.target.files[0];e.target.value='';if(!f)return;
   try{const bm=await createImageBitmap(f),c=await decode(bm,bm.width,bm.height,1600);c?handle(c):toast('لم أجد QR في الصورة — قرّب الكاميرا وأعد المحاولة','w')}catch(err){toast('تعذر قراءة الصورة','w')}
 });
-// ---- access gate (usernames + passwords, checked against access.json) ----
-const GRACE=7*24*3600*1000,AK='acc|state';
-let locked=true,chk=true,lockMsg='',AC=null,fails=0,until=0,lastU='';
+// ---- access gate (username + password on every launch, checked against access.json) ----
+const GRACE=7*24*3600*1000,AK='acc|user',CK='acc|cache';
+let locked=true,chk=true,lockMsg='',AC=null,fails=0,until=0,lastU='',curH='';
 const hx=b=>[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');
 const unhx=h=>new Uint8Array((String(h).match(/../g)||[]).map(x=>parseInt(x,16)));
 const nu=x=>String(x||'').trim().toLowerCase();
 async function pbk(pw,A){const k=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveBits']);return hx(await crypto.subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',salt:unhx(A.salt),iterations:A.iter||200000},k,256))}
-function getSt(){try{const o=JSON.parse(localStorage.getItem(AK)||'null');return o&&o.u?o:null}catch(e){return null}}
-function setSt(o){try{localStorage.setItem(AK,JSON.stringify(o))}catch(e){}}
+function getU(){try{return localStorage.getItem(AK)||''}catch(e){return ''}}
+function setU(u){try{localStorage.setItem(AK,u)}catch(e){}}
+function getCache(){try{const o=JSON.parse(localStorage.getItem(CK)||'null');return o&&o.A&&Array.isArray(o.A.users)&&Date.now()-o.t<=GRACE?o.A:null}catch(e){return null}}
+function setCache(A){try{localStorage.setItem(CK,JSON.stringify({A,t:Date.now()}))}catch(e){}}
 async function getAcc(){
   try{const c=new AbortController(),t=setTimeout(()=>c.abort(),5000);
     const r=await fetch('access.json?'+Date.now(),{cache:'no-store',signal:c.signal});clearTimeout(t);
-    if(!r.ok)return 0;const j=await r.json();return j&&Array.isArray(j.users)&&j.users.length?j:0}
+    if(!r.ok)return 0;const j=await r.json();
+    if(j&&Array.isArray(j.users)&&j.users.length){setCache(j);return j}return 0}
   catch(e){return null}
 }
-async function gate(){
-  const A=await getAcc(),st=getSt(),now=Date.now();
-  if(st)lastU=st.u;
-  if(A){AC=A;const e=st&&A.users.find(x=>nu(x.u)===nu(st.u));
-    if(e&&e.hash===st.h){setSt({u:st.u,h:e.hash,t:now});return true}
-    lockMsg=!st?'اكتب اسم المستخدم وكلمة السر.':e?'تم تغيير كلمة السر. اكتب كلمة السر الجديدة.':'هذا المستخدم غير موجود أو تم إيقافه.';
-    return false}
-  if(st&&now-st.t<=GRACE)return true;
-  lockMsg=A===0?'ملف الدخول access.json غير موجود أو غير صالح على الموقع.':st?'انتهت مدة العمل بدون إنترنت (7 أيام). اتصل بالإنترنت ثم أعد فتح التطبيق.':'يلزم اتصال بالإنترنت لأول دخول.';
+async function boot(){
+  lastU=getU();
+  const A=await getAcc();
+  if(A){AC=A;lockMsg='اكتب اسم المستخدم وكلمة السر.'}
+  else{AC=getCache();
+    lockMsg=AC?'لا يوجد اتصال بالإنترنت. يمكنك الدخول بآخر بيانات محفوظة (آخر تحديث خلال 7 أيام).':A===0?'ملف الدخول access.json غير موجود أو غير صالح على الموقع.':'يلزم اتصال بالإنترنت لأول دخول، أو بعد مرور 7 أيام بدون اتصال.'}
+  chk=false;locked=true;render();
+}
+async function recheck(){
+  const A=await getAcc();if(!A)return true;
+  AC=A;const e=A.users.find(x=>nu(x.u)===nu(lastU));
+  if(e&&e.hash===curH)return true;
+  lockMsg=e?'تم تغيير كلمة السر. اكتب كلمة السر الجديدة.':'هذا المستخدم غير موجود أو تم إيقافه.';
   return false;
 }
 function lockUI(a){
@@ -10351,19 +10358,19 @@ async function unlock(){
   const un=nu(($('#un')||{}).value),pw=($('#pw')||{}).value;
   if(!un||!pw)return toast('اكتب اسم المستخدم وكلمة السر','w');
   if(Date.now()<until)return toast('انتظر قليلاً قبل المحاولة التالية','w');
-  const A=await getAcc()||AC;
+  const A=(await getAcc())||AC||getCache();
   if(!A){lockMsg='لا يمكن التحقق الآن. تأكد من الإنترنت ثم حاول مرة أخرى.';return render()}
   AC=A;const e=A.users.find(x=>nu(x.u)===un);let ok=false;
   if(e){try{ok=(await pbk(pw,e))===e.hash}catch(x){return toast('المتصفح لا يدعم التحقق هنا','w')}}
-  if(ok){locked=false;fails=0;lastU=un;setSt({u:un,h:e.hash,t:Date.now()});render();toast('أهلاً '+un,'ok')}
+  if(ok){locked=false;fails=0;lastU=un;curH=e.hash;setU(un);render();toast('أهلاً '+un,'ok')}
   else{const el=$('#pw');if(el)el.value='';if(++fails>=5){fails=0;until=Date.now()+30000;toast('محاولات كثيرة. انتظر 30 ثانية','w')}else toast('اسم المستخدم أو كلمة السر غير صحيحة','w')}
 }
 document.addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.target.id==='pw'||e.target.id==='un'))unlock()});
 document.addEventListener('visibilitychange',async()=>{
   if(document.hidden||locked)return;
-  if(!(await gate())){locked=true;scanStop();$('#sheet').hidden=true;render()}
+  if(!(await recheck())){locked=true;scanStop();$('#sheet').hidden=true;render()}
 });
 render();
-gate().then(ok=>{chk=false;locked=!ok;render()});
+boot();
 if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script></body></html>
