@@ -28,7 +28,7 @@ button.big{width:100%;padding:16px;font-size:18px}
 .it{display:flex;justify-content:space-between;gap:10px;align-items:center;width:100%;text-align:right;background:var(--card);color:var(--ink);border:1px solid var(--line);padding:10px 12px;margin-bottom:6px;font-weight:400}
 .it b{display:block}.it small{color:var(--sub)}
 .tag{padding:3px 10px;border-radius:20px;font-size:13px;font-weight:700;color:#fff;white-space:nowrap}.tag.n{background:#cfd4cd;color:var(--ink)}
-input[type=text],textarea{font:inherit;width:100%;padding:11px;border:1px solid var(--line);border-radius:var(--r);background:#fff;color:var(--ink)}
+input[type=text],input[type=password],textarea{font:inherit;width:100%;padding:11px;border:1px solid var(--line);border-radius:var(--r);background:#fff;color:var(--ink)}
 textarea.err{border-color:var(--b);outline:2px solid var(--b)}
 .ub{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:10px 0}.ub button{padding:16px 4px;font-size:19px;background:#e6e9e4;color:var(--ink)}.ub button.on{background:var(--teal);color:#fff}.ub.err{outline:2px solid var(--b);border-radius:var(--r);outline-offset:3px}
 .note{color:var(--sub);font-size:14px;margin:8px 0}.warn{background:#fff4d6;border:1px solid #e6c766;padding:8px 10px;border-radius:var(--r);font-size:14px;margin-bottom:10px}
@@ -10214,7 +10214,7 @@ async function openFile(f){
 }
 function go(v,n){view=v;if(n){cur=S[n];filt='all'}render();scrollTo(0,0)}
 function render(){
-  const a=$('#app');$('#bt').textContent=view==='home'?'خروج':'رجوع';$('#bi').textContent=view==='home'?'✕':'→';
+  const a=$('#app');if(locked){lockUI(a);return}$('#bt').textContent=view==='home'?'خروج':'رجوع';$('#bi').textContent=view==='home'?'✕':'→';
   $('#ttl').textContent=view==='inv'?cur.name:view==='locs'?'المواقع':'جرد الأصول';
   if(view==='home'){a.innerHTML=`<div class="card"><h2 style="margin:0 0 6px">ابدأ الجرد</h2><p class="note">اختر ملف Excel من الموبايل. كل شيت يتحول إلى موقع تلقائياً، وكل شيء يعمل بدون إنترنت.</p><button class="big" data-a="pick">اختيار ملف الجرد</button></div>`+`<div class="qrb">${QR}</div>`+(store?'':'<div class="warn">المتصفح لا يسمح بحفظ التقدم هنا، فصدّر التقرير بعد كل موقع.</div>');return}
   if(view==='locs'){
@@ -10294,7 +10294,8 @@ function exportXlsx(names){
 // ---- events ----
 document.addEventListener('click',e=>{
   const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,n=b.dataset.n;
-  if(a==='pick')$('#f').click();
+  if(a==='unlock')unlock();
+  else if(a==='pick')$('#f').click();
   else if(a==='back'){if(view==='home'){window.close();setTimeout(()=>toast('لإغلاق التطبيق استخدم زر الرجوع في الموبايل أو أغلقه من قائمة التطبيقات'),400)}else go(view==='inv'?'locs':'home')}
   else if(a==='loc')go('inv',n);
   else if(a==='f'){filt=n;render()}
@@ -10315,6 +10316,50 @@ $('#ph').addEventListener('change',async e=>{
   const f=e.target.files[0];e.target.value='';if(!f)return;
   try{const bm=await createImageBitmap(f),c=await decode(bm,bm.width,bm.height,1600);c?handle(c):toast('لم أجد QR في الصورة — قرّب الكاميرا وأعد المحاولة','w')}catch(err){toast('تعذر قراءة الصورة','w')}
 });
+// ---- access gate (shared password, checked against access.json) ----
+const GRACE=7*24*3600*1000,AK='acc|state';
+let locked=true,chk=true,lockMsg='',AC=null,fails=0,until=0;
+const hx=b=>[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');
+const unhx=h=>new Uint8Array((String(h).match(/../g)||[]).map(x=>parseInt(x,16)));
+async function pbk(pw,A){const k=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveBits']);return hx(await crypto.subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',salt:unhx(A.salt),iterations:A.iter||200000},k,256))}
+function getSt(){try{return JSON.parse(localStorage.getItem(AK)||'null')}catch(e){return null}}
+function setSt(o){try{localStorage.setItem(AK,JSON.stringify(o))}catch(e){}}
+async function getAcc(){
+  try{const c=new AbortController(),t=setTimeout(()=>c.abort(),5000);
+    const r=await fetch('access.json?'+Date.now(),{cache:'no-store',signal:c.signal});clearTimeout(t);
+    if(!r.ok)return 0;const j=await r.json();return j&&j.hash&&j.salt?j:0}
+  catch(e){return null}
+}
+async function gate(){
+  const A=await getAcc(),st=getSt(),now=Date.now();
+  if(A){AC=A;
+    if(st&&st.h===A.hash){setSt({h:A.hash,t:now});return true}
+    lockMsg=st?'تم تغيير كلمة السر. اكتب كلمة السر الجديدة.':'اكتب كلمة السر للدخول.';return false}
+  if(st&&now-st.t<=GRACE)return true;
+  lockMsg=A===0?'ملف الدخول access.json غير موجود أو غير صالح على الموقع.':st?'انتهت مدة العمل بدون إنترنت (7 أيام). اتصل بالإنترنت ثم أعد فتح التطبيق.':'يلزم اتصال بالإنترنت لأول دخول.';
+  return false;
+}
+function lockUI(a){
+  $('#ttl').textContent='جرد الأصول';$('#bt').textContent='خروج';$('#bi').textContent='✕';
+  a.innerHTML=chk?'<div class="card"><p class="note">جارٍ التحقق…</p></div>':
+  `<div class="card"><h2 style="margin:0 0 6px">تسجيل الدخول</h2><p class="note">${esc(lockMsg)}</p><input type="password" id="pw" placeholder="كلمة السر" autocomplete="current-password"><div class="row"><button class="big" data-a="unlock">دخول</button></div></div>`;
+}
+async function unlock(){
+  const pw=($('#pw')||{}).value;if(!pw)return;
+  if(Date.now()<until)return toast('انتظر قليلاً قبل المحاولة التالية','w');
+  const A=await getAcc()||AC;
+  if(!A){lockMsg='لا يمكن التحقق الآن. تأكد من الإنترنت ثم حاول مرة أخرى.';return render()}
+  AC=A;let h;
+  try{h=await pbk(pw,A)}catch(e){return toast('المتصفح لا يدعم التحقق هنا','w')}
+  if(h===A.hash){locked=false;fails=0;setSt({h:A.hash,t:Date.now()});render();toast('تم الدخول ✓','ok')}
+  else{const el=$('#pw');if(el)el.value='';if(++fails>=5){fails=0;until=Date.now()+30000;toast('محاولات كثيرة. انتظر 30 ثانية','w')}else toast('كلمة السر غير صحيحة','w')}
+}
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='pw')unlock()});
+document.addEventListener('visibilitychange',async()=>{
+  if(document.hidden||locked)return;
+  if(!(await gate())){locked=true;scanStop();$('#sheet').hidden=true;render()}
+});
 render();
+gate().then(ok=>{chk=false;locked=!ok;render()});
 if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script></body></html>
