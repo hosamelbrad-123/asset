@@ -30,6 +30,7 @@ button.big{width:100%;padding:16px;font-size:18px}
 .tag{padding:3px 10px;border-radius:20px;font-size:13px;font-weight:700;color:#fff;white-space:nowrap}.tag.n{background:#cfd4cd;color:var(--ink)}
 input[type=text],textarea{font:inherit;width:100%;padding:11px;border:1px solid var(--line);border-radius:var(--r);background:#fff;color:var(--ink)}
 textarea.err{border-color:var(--b);outline:2px solid var(--b)}
+.ub{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:10px 0}.ub button{padding:16px 4px;font-size:19px;background:#e6e9e4;color:var(--ink)}.ub button.on{background:var(--teal);color:#fff}.ub.err{outline:2px solid var(--b);border-radius:var(--r);outline-offset:3px}
 .note{color:var(--sub);font-size:14px;margin:8px 0}.warn{background:#fff4d6;border:1px solid #e6c766;padding:8px 10px;border-radius:var(--r);font-size:14px;margin-bottom:10px}
 .ov{position:fixed;inset:0;background:rgba(10,20,25,.7);z-index:20;display:flex;align-items:flex-end;justify-content:center}
 .ov[hidden]{display:none}
@@ -10181,13 +10182,13 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',
 const norm=s=>String(s??'').trim().replace(/\s+/g,'').toUpperCase();
 const QR=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 33 33" shape-rendering="crispEdges" role="img" aria-label="حسام صلاح البراد"><rect width="33" height="33" fill="#fff"/><path d="M2 2h7v1h-7zM12 2h1v1h-1zM14 2h4v1h-4zM19 2h1v1h-1zM22 2h1v1h-1zM24 2h7v1h-7zM2 3h1v1h-1zM8 3h1v1h-1zM11 3h1v1h-1zM13 3h6v1h-6zM20 3h2v1h-2zM24 3h1v1h-1zM30 3h1v1h-1zM2 4h1v1h-1zM4 4h3v1h-3zM8 4h1v1h-1zM10 4h1v1h-1zM12 4h2v1h-2zM15 4h1v1h-1zM17 4h1v1h-1zM19 4h2v1h-2zM22 4h1v1h-1zM24 4h1v1h-1zM26 4h3v1h-3zM30 4h1v1h-1zM2 5h1v1h-1zM4 5h3v1h-3zM8 5h1v1h-1zM10 5h1v1h-1zM12 5h1v1h-1zM16 5h2v1h-2zM19 5h2v1h-2zM24 5h1v1h-1zM26 5h3v1h-3zM30 5h1v1h-1zM2 6h1v1h-1zM4 6h3v1h-3zM8 6h1v1h-1zM10 6h1v1h-1zM12 6h1v1h-1zM17 6h4v1h-4zM24 6h1v1h-1zM26 6h3v1h-3zM30 6h1v1h-1zM2 7h1v1h-1zM8 7h1v1h-1zM10 7h1v1h-1zM12 7h1v1h-1zM20 7h3v1h-3zM24 7h1v1h-1zM30 7h1v1h-1zM2 8h7v1h-7zM10 8h1v1h-1zM12 8h1v1h-1zM14 8h1v1h-1zM16 8h1v1h-1zM18 8h1v1h-1zM20 8h1v1h-1zM22 8h1v1h-1zM24 8h7v1h-7zM10 9h1v1h-1zM12 9h3v1h-3zM16 9h1v1h-1zM18 9h3v1h-3zM2 10h1v1h-1zM4 10h5v1h-5zM11 10h4v1h-4zM18 10h1v1h-1zM21 10h2v1h-2zM24 10h5v1h-5zM2 11h2v1h-2zM5 11h3v1h-3zM9 11h1v1h-1zM12 11h1v1h-1zM15 11h3v1h-3zM19 11h1v1h-1zM22 11h2v1h-2zM30 11h1v1h-1zM2 12h4v1h-4zM7 12h4v1h-4zM14 12h5v1h-5zM20 12h3v1h-3zM25 12h6v1h-6zM4 13h1v1h-1zM7 13h1v1h-1zM10 13h6v1h-6zM17 13h1v1h-1zM19 13h5v1h-5zM27 13h3v1h-3zM2 14h1v1h-1zM7 14h2v1h-2zM10 14h2v1h-2zM16 14h2v1h-2zM19 14h2v1h-2zM24 14h4v1h-4zM29 14h2v1h-2zM3 15h1v1h-1zM5 15h2v1h-2zM10 15h1v1h-1zM17 15h2v1h-2zM21 15h1v1h-1zM25 15h1v1h-1zM28 15h1v1h-1zM3 16h1v1h-1zM7 16h5v1h-5zM13 16h1v1h-1zM20 16h2v1h-2zM23 16h4v1h-4zM30 16h1v1h-1zM2 17h1v1h-1zM4 17h3v1h-3zM10 17h3v1h-3zM14 17h1v1h-1zM16 17h1v1h-1zM18 17h2v1h-2zM23 17h1v1h-1zM25 17h2v1h-2zM28 17h1v1h-1zM2 18h1v1h-1zM4 18h3v1h-3zM8 18h1v1h-1zM10 18h1v1h-1zM13 18h1v1h-1zM18 18h1v1h-1zM21 18h5v1h-5zM28 18h1v1h-1zM30 18h1v1h-1zM2 19h1v1h-1zM4 19h2v1h-2zM7 19h1v1h-1zM9 19h2v1h-2zM12 19h1v1h-1zM15 19h3v1h-3zM19 19h1v1h-1zM22 19h3v1h-3zM27 19h1v1h-1zM29 19h2v1h-2zM2 20h1v1h-1zM4 20h2v1h-2zM7 20h12v1h-12zM20 20h2v1h-2zM26 20h5v1h-5zM2 21h1v1h-1zM4 21h3v1h-3zM9 21h1v1h-1zM12 21h1v1h-1zM14 21h2v1h-2zM17 21h1v1h-1zM19 21h2v1h-2zM24 21h1v1h-1zM27 21h3v1h-3zM2 22h1v1h-1zM5 22h2v1h-2zM8 22h1v1h-1zM11 22h2v1h-2zM16 22h2v1h-2zM19 22h2v1h-2zM22 22h6v1h-6zM29 22h2v1h-2zM10 23h1v1h-1zM12 23h2v1h-2zM17 23h2v1h-2zM20 23h1v1h-1zM22 23h1v1h-1zM26 23h1v1h-1zM28 23h1v1h-1zM2 24h7v1h-7zM11 24h2v1h-2zM19 24h1v1h-1zM21 24h2v1h-2zM24 24h1v1h-1zM26 24h2v1h-2zM30 24h1v1h-1zM2 25h1v1h-1zM8 25h1v1h-1zM10 25h1v1h-1zM13 25h2v1h-2zM16 25h1v1h-1zM18 25h2v1h-2zM22 25h1v1h-1zM26 25h1v1h-1zM28 25h3v1h-3zM2 26h1v1h-1zM4 26h3v1h-3zM8 26h1v1h-1zM10 26h2v1h-2zM13 26h1v1h-1zM22 26h5v1h-5zM30 26h1v1h-1zM2 27h1v1h-1zM4 27h3v1h-3zM8 27h1v1h-1zM10 27h1v1h-1zM12 27h1v1h-1zM16 27h2v1h-2zM19 27h1v1h-1zM21 27h1v1h-1zM24 27h4v1h-4zM2 28h1v1h-1zM4 28h3v1h-3zM8 28h1v1h-1zM10 28h2v1h-2zM13 28h2v1h-2zM16 28h3v1h-3zM20 28h3v1h-3zM25 28h1v1h-1zM27 28h1v1h-1zM29 28h1v1h-1zM2 29h1v1h-1zM8 29h1v1h-1zM14 29h3v1h-3zM18 29h3v1h-3zM22 29h3v1h-3zM26 29h1v1h-1zM29 29h1v1h-1zM2 30h7v1h-7zM10 30h2v1h-2zM13 30h3v1h-3zM19 30h2v1h-2zM22 30h2v1h-2zM26 30h1v1h-1zM28 30h1v1h-1z" fill="#17252d"/></svg>`;
 let store=true;try{localStorage.setItem('t','1')}catch(e){store=false}
-let S={},order=[],ign=0,fname='',cur=null,view='home',filt='all',pend=null,idx={};
+let S={},order=[],ign=0,fname='',cur=null,view='home',filt='all',pend=null,idx={},useSel=null;
 const CL={'جيد':'g','متوسط':'m','ردئ':'b'};
 const KEY=n=>'inv|'+fname+'|'+n;
 function ld(n){try{return JSON.parse(localStorage.getItem(KEY(n))||'{}')}catch(e){return{}}}
 function sv(){if(store)try{localStorage.setItem(KEY(cur.name),JSON.stringify(cur.rec))}catch(e){}}
 function toast(m,k){const t=$('#toast');t.textContent=m;t.className=k||'';t.style.display='block';clearTimeout(toast.h);toast.h=setTimeout(()=>t.style.display='none',3200)}
-const stats=s=>{const c={g:0,m:0,b:0,n:0};s.items.forEach(i=>{const r=s.rec[i.k];r?c[CL[r.c]]++:c.n++});c.done=c.g+c.m+c.b;return c};
+const stats=s=>{const c={g:0,m:0,b:0,n:0,us:0,ui:0};s.items.forEach(i=>{const r=s.rec[i.k];r?c[CL[r.c]]++:c.n++;if(r&&r.u==='مستغل')c.us++;if(r&&r.u==='غير مستغل')c.ui++});c.done=c.g+c.m+c.b;return c};
 const barH=(c,t)=>`<div class="bar"><i class="g" style="width:${c.g/t*100}%"></i><i class="m" style="width:${c.m/t*100}%"></i><i class="b" style="width:${c.b/t*100}%"></i></div>`;
 
 async function openFile(f){
@@ -10199,7 +10200,7 @@ async function openFile(f){
       let h=-1,c={};
       for(let i=0;i<Math.min(rows.length,15)&&h<0;i++){
         const j=rows[i].findIndex(x=>String(x).includes('مسلسل الأصل'));
-        if(j>=0){h=i;c.s=j;rows[i].forEach((x,k)=>{x=String(x);if(x.includes('وصف'))c.d=k;if(x.includes('الماركة'))c.b=k;if(x.includes('الطراز'))c.m=k})}
+        if(j>=0){h=i;c.s=j;rows[i].forEach((x,k)=>{x=String(x);if(x.includes('وصف'))c.d=k;if(x.includes('الماركة'))c.b=k;if(x.includes('الطراز'))c.m=k;if(x.includes('الاستخدام'))c.u=k})}
       }
       const items=[];
       if(h>=0)for(let i=h+1;i<rows.length;i++){const s=String(rows[i][c.s]??'').trim();if(s)items.push({k:norm(s),s,d:String(rows[i][c.d]??''),b:String(rows[i][c.b]??''),m:String(rows[i][c.m]??'')})}
@@ -10222,17 +10223,19 @@ function render(){
       +(order.length?'<div class="row"><button data-a="expall">تصدير كل المواقع (Excel)</button></div>':'')+'<div class="row"><button class="alt" data-a="pick">اختيار ملف آخر</button></div>';return}
   const s=cur,c=stats(s),t=s.items.length;
   const L=s.items.filter(i=>filt==='all'||(filt==='d')===!!s.rec[i.k]);
-  a.innerHTML=`<div class="card"><div class="count">${c.done}<span> / ${t}</span></div>${barH(c,t)}<p class="note" style="margin:8px 0 0">جيد ${c.g} · متوسط ${c.m} · ردئ ${c.b} · لم يُجرد ${c.n}</p></div>
+  a.innerHTML=`<div class="card"><div class="count">${c.done}<span> / ${t}</span></div>${barH(c,t)}<p class="note" style="margin:8px 0 0">جيد ${c.g} · متوسط ${c.m} · ردئ ${c.b} · لم يُجرد ${c.n}<br>مستغل ${c.us} · غير مستغل ${c.ui}</p></div>
   <button class="big" data-a="scan">📷 مسح QR Code</button>
   <div class="row"><button class="alt" data-a="photo">التقاط صورة QR</button><button class="alt" data-a="exp">تصدير هذا الموقع</button></div>
   <div class="row"><input type="text" id="man" placeholder="أو اكتب مسلسل الأصل" autocomplete="off"><button class="alt" data-a="man" style="flex:0 0 auto">بحث</button></div>
   <div class="tabs">${[['all','الكل'],['d','تم'],['n','لم يتم']].map(x=>`<button class="${filt===x[0]?'on':''}" data-a="f" data-n="${x[0]}">${x[1]}</button>`).join('')}</div>
-  ${L.map(i=>{const r=s.rec[i.k];return `<button class="it" data-a="item" data-n="${esc(i.k)}"><span><b>${esc(i.d||i.s)}</b><small>${esc(i.s)}${i.b?' · '+esc(i.b):''}${i.m?' '+esc(i.m):''}</small></span><span class="tag ${r?CL[r.c]:'n'}">${r?r.c:'لم يتم'}</span></button>`}).join('')||'<p class="note">لا يوجد شيء في هذه القائمة.</p>'}
+  ${L.map(i=>{const r=s.rec[i.k];return `<button class="it" data-a="item" data-n="${esc(i.k)}"><span><b>${esc(i.d||i.s)}</b><small>${esc(i.s)}${i.b?' · '+esc(i.b):''}${i.m?' '+esc(i.m):''}${r&&r.u?' · '+r.u:''}</small></span><span class="tag ${r?CL[r.c]:'n'}">${r?r.c:'لم يتم'}</span></button>`}).join('')||'<p class="note">لا يوجد شيء في هذه القائمة.</p>'}
   <div class="row"><button class="alt" data-a="reset">مسح نتائج هذا الموقع</button></div>`;
 }
 function openSheet(i){
-  pend=i;const r=cur.rec[i.k];
-  $('#shc').innerHTML=`<b style="font-size:18px">${esc(i.d||i.s)}</b><div class="note">${esc(i.s)}${i.b?' · '+esc(i.b):''}${i.m?' '+esc(i.m):''}</div>${r?`<div class="warn">تم جرده سابقاً: ${r.c} (${r.t}). اختيار جديد يحل محله.</div>`:''}
+  pend=i;const r=cur.rec[i.k];useSel=r&&r.u?r.u:null;
+  $('#shc').innerHTML=`<b style="font-size:18px">${esc(i.d||i.s)}</b><div class="note">${esc(i.s)}${i.b?' · '+esc(i.b):''}${i.m?' '+esc(i.m):''}</div>${r?`<div class="warn">تم جرده سابقاً: ${r.c}${r.u?' · '+r.u:''} (${r.t}). اختيار جديد يحل محله.</div>`:''}
+  <div style="font-weight:700">الاستخدام</div>
+  <div class="ub" id="ub"><button data-a="u" data-n="مستغل" class="${useSel==='مستغل'?'on':''}">مستغل</button><button data-a="u" data-n="غير مستغل" class="${useSel==='غير مستغل'?'on':''}">غير مستغل</button></div>
   <div style="font-weight:700">الحالة الظاهرية</div>
   <div class="cb"><button style="background:var(--g)" data-a="c" data-n="جيد">جيد</button><button style="background:var(--m)" data-a="c" data-n="متوسط">متوسط</button><button style="background:var(--b)" data-a="c" data-n="ردئ">ردئ</button></div>
   <textarea id="nt" rows="3" placeholder="ملاحظة (إجبارية مع «ردئ»)">${r?esc(r.n||''):''}</textarea>
@@ -10240,9 +10243,10 @@ function openSheet(i){
   $('#sheet').hidden=false;
 }
 function saveRec(c){
+  if(!useSel){$('#ub').classList.add('err');return toast('اختر الاستخدام: مستغل أو غير مستغل أولاً','w')}
   const ta=$('#nt'),n=ta.value.trim();
   if(c==='ردئ'&&!n){ta.classList.add('err');ta.focus();return toast('اكتب ملاحظة قبل حفظ حالة «ردئ»','w')}
-  cur.rec[pend.k]={c,n,t:new Date().toLocaleString('sv').slice(0,16)};sv();
+  cur.rec[pend.k]={c,n,u:useSel,t:new Date().toLocaleString('sv').slice(0,16)};sv();
   $('#sheet').hidden=true;render();toast('تم الحفظ ✓','ok');
 }
 function handle(code){
@@ -10271,11 +10275,15 @@ async function tick(){
 function scanStop(){clearTimeout(tm);if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;$('#scan').hidden=true}
 // ---- export ----
 function sheetOut(n){
-  const s=S[n],W=Math.max(...s.rows.map(r=>r.length));
-  const out=s.rows.map((r,i)=>{r=r.concat(Array(W-r.length).fill(''));if(i<s.h)return r.concat(['','','','']);
-    if(i===s.h)return r.concat(['الحالة الفعلية','الملاحظة','وقت الجرد','نتيجة الجرد']);
-    const k=norm(r[s.c.s]);if(!k)return r.concat(['','','','']);const x=s.rec[k];
-    return r.concat(x?[x.c,x.n||'',x.t,'تم الجرد']:['','','','لم يتم الجرد'])});
+  const s=S[n],W=Math.max(...s.rows.map(r=>r.length)),hu=s.c.u!==undefined;
+  const ex=hu?['الحالة الفعلية','الملاحظة','وقت الجرد','نتيجة الجرد']:['الحالة الفعلية','الاستخدام','الملاحظة','وقت الجرد','نتيجة الجرد'];
+  const blank=()=>ex.map(()=>'');
+  const out=s.rows.map((r,i)=>{r=r.concat(Array(W-r.length).fill(''));if(i<s.h)return r.concat(blank());
+    if(i===s.h)return r.concat(ex);
+    const k=norm(r[s.c.s]);if(!k)return r.concat(blank());const x=s.rec[k];
+    if(hu&&x&&x.u)r[s.c.u]=x.u;
+    if(!x){const b=blank();b[b.length-1]='لم يتم الجرد';return r.concat(b)}
+    return r.concat(hu?[x.c,x.n||'',x.t,'تم الجرد']:[x.c,x.u||'',x.n||'',x.t,'تم الجرد'])});
   return XLSX.utils.aoa_to_sheet(out);
 }
 function exportXlsx(names){
@@ -10294,6 +10302,7 @@ document.addEventListener('click',e=>{
   else if(a==='photo')$('#ph').click();
   else if(a==='man'){const v=$('#man').value.trim();if(v)handle(v)}
   else if(a==='item')openSheet(cur.items.find(x=>x.k===n));
+  else if(a==='u'){useSel=n;document.querySelectorAll('#ub button').forEach(x=>x.classList.toggle('on',x.dataset.n===n));$('#ub').classList.remove('err')}
   else if(a==='c')saveRec(n);
   else if(a==='del'){delete cur.rec[pend.k];sv();$('#sheet').hidden=true;render()}
   else if(a==='close')$('#sheet').hidden=true;
